@@ -1,0 +1,266 @@
+import { Component } from '@angular/core';
+import { AngularFirestore } from '@angular/fire/compat/firestore';
+import { AutoCompleteCompleteEvent, Players } from './players';
+import { FormBuilder, FormGroup, Validators } from '@angular/forms';
+import { ToastrService } from 'ngx-toastr';
+
+
+@Component({
+  selector: 'app-root',
+  templateUrl: './app.component.html',
+  styleUrl: './app.component.scss'
+})
+
+export class AppComponent {
+  users: Players[] = [];
+  selectedOption: number = 0;
+  selectedName: string = '';
+  docId: any
+
+
+  name: string[] = [];
+  suggestions: any[] = [];
+
+
+  formAdd!: FormGroup;
+  formEdit!: FormGroup;
+  displayAdd: boolean = false;
+  displayEdit: boolean = false;
+
+  constructor(private firestore: AngularFirestore, private fb: FormBuilder, private toastr: ToastrService) { }
+
+  ngOnInit(): void {
+    this.firestore.collection('users').valueChanges().subscribe(data => {
+      this.users = data.map((player: any) => {
+        let allScore =
+          (player.score1 || 0) + (player.score2 || 0) + (player.score3 || 0) + (player.score4 || 0) + (player.score5 || 0); return {
+            ...player,
+            allScore: allScore
+          } as Players;
+      });
+      this.users.sort((a, b) => b.allScore - a.allScore);
+      this.name = this.users.map(user => user.name)
+
+    });
+    this.createFormAdd();
+    this.createFormEdit();
+  }
+
+  createFormAdd() {
+    this.formAdd = this.fb.group({
+      name: [null, Validators.required],
+      score1: null,
+      score2: null,
+      score3: null,
+      score4: null,
+      score5: null,
+    })
+  }
+
+  createFormEdit() {
+    this.formEdit = this.fb.group({
+      name: [null, Validators.required],
+      score1: null,
+      score2: null,
+      score3: null,
+      score4: null,
+      score5: null,
+    })
+  }
+
+  onSearch() {
+    this.firestore
+      .collection('users', ref => ref.where('name', '==', this.selectedName))
+      .get()
+      .subscribe((snapshot) => {
+        if (!snapshot.empty) {
+          let users = snapshot.docs.map((doc: any) => {
+            this.docId = doc.id;
+            let user = doc.data();
+            let allScore: Players =
+              (user.score1 || 0) + (user.score2 || 0) + (user.score3 || 0) + (user.score4 || 0) + (user.score5 || 0);
+
+            return {
+              ...user,
+              allScore: allScore,
+              docId: this.docId
+            } as Players;
+          });
+
+          let user = users[0];
+
+          this.formEdit.patchValue({
+            name: user.name,
+            score1: user.score1,
+            score2: user.score2,
+            score3: user.score3,
+            score4: user.score4,
+            score5: user.score5
+          });
+        }
+      });
+  }
+
+
+  onSave() {
+    if (this.formAdd.valid) {
+      const formData = this.formAdd.value;
+
+      this.firestore.collection('users', ref => ref.where('name', '==', formData.name))
+        .get()
+        .subscribe(snapshot => {
+          if (snapshot.empty) {
+            this.firestore.collection('users').add(formData);
+            this.toastr.success('บันทึกข้อมูลสำเร็จ!', 'สำเร็จ');
+            this.formAdd.reset();
+
+          } else {
+            this.toastr.error('ชื่อนี้มีผู้ใช้แล้ว!', 'เกิดข้อผิดพลาด');
+          }
+        });
+    } else {
+      this.toastr.error('โปรดกรอกชื่อ!', 'เกิดข้อผิดพลาด');
+    }
+  }
+
+  // onUpdate() {
+  //   const formData = this.formEdit.value;
+
+  //   if (this.formEdit.valid) {
+  //     this.firestore.collection('users').doc(this.docId).update({
+  //       name: formData.name,
+  //       score1: formData.score1,
+  //       score2: formData.score2,
+  //       score3: formData.score3,
+  //       score4: formData.score4,
+  //       score5: formData.score5
+  //     });
+  //     this.toastr.success('อัปเดตข้อมูลเรียบร้อย!', 'สำเร็จ');
+  //     this.formEdit.reset();
+  //   }
+  //   else {
+  //     this.toastr.error('โปรดกรอกชื่อ!', 'เกิดข้อผิดพลาด');
+  //   }
+  // }
+
+  onUpdate() {
+    const formData = this.formEdit.value;
+  
+    if (this.formEdit.valid) {
+      // ค้นหาผู้เล่นที่มีชื่อเดียวกันในระบบ
+      this.firestore
+        .collection('users', ref => ref.where('name', '==', formData.name))
+        .get()
+        .subscribe(snapshot => {
+          if (snapshot.empty) {
+            // ถ้าไม่พบผู้เล่น
+            this.toastr.error('ไม่พบผู้เล่นที่มีชื่อดังกล่าว!', 'เกิดข้อผิดพลาด');
+          } else {
+            // ถ้าพบผู้เล่น, ทำการอัปเดตข้อมูล
+            snapshot.forEach(doc => {
+              this.firestore.collection('users').doc(this.docId).update({
+                name: formData.name,
+                score1: formData.score1,
+                score2: formData.score2,
+                score3: formData.score3,
+                score4: formData.score4,
+                score5: formData.score5
+              });
+              this.toastr.success('อัปเดตข้อมูลเรียบร้อย!', 'สำเร็จ');
+              this.formEdit.reset();
+              this.docId.reset();
+            });
+          }
+        });
+    } else {
+      this.toastr.error('โปรดกรอกข้อมูลให้ครบถ้วน!', 'เกิดข้อผิดพลาด');
+    }
+  }
+  
+
+  onDelete() {
+    const name = this.formEdit.value.name;
+    if (name) {
+      this.firestore.collection('users', ref => ref.where('name', '==', name))
+        .get()
+        .subscribe(snapshot => {
+          if (!snapshot.empty) {
+            snapshot.forEach(doc => {
+              this.firestore.collection('users').doc(doc.id).delete()
+              this.formEdit.reset();
+              this.toastr.success('ลบข้อมูลเรียบร้อย!', 'สำเร็จ');
+            });
+          } else {
+            this.toastr.error('ไม่พบผู้ใช้ที่ต้องการลบ!', 'เกิดข้อผิดพลาด');
+          }
+        });
+    } else {
+      this.toastr.error('โปรดกรอกชื่อ!', 'เกิดข้อผิดพลาด');
+    }
+  }
+
+  showAllScore() {
+    this.selectedOption = 0;
+    this.users.sort((a, b) => b.allScore - a.allScore);
+  }
+
+  showScore1() {
+    this.selectedOption = 1;
+    this.users.sort((a, b) => {
+      const scoreA = a.score1 ?? 0;
+      const scoreB = b.score1 ?? 0;
+      return scoreB - scoreA;
+    });
+  }
+
+  showScore2() {
+    this.selectedOption = 2;
+    this.users.sort((a, b) => {
+      const scoreA = a.score2 ?? 0;
+      const scoreB = b.score2 ?? 0;
+      return scoreB - scoreA;
+    });
+  }
+
+  showScore3() {
+    this.selectedOption = 3;
+    this.users.sort((a, b) => {
+      const scoreA = a.score3 ?? 0;
+      const scoreB = b.score3 ?? 0;
+      return scoreB - scoreA;
+    });
+  }
+
+  showScore4() {
+    this.selectedOption = 4;
+    this.users.sort((a, b) => {
+      const scoreA = a.score4 ?? 0;
+      const scoreB = b.score4 ?? 0;
+      return scoreB - scoreA;
+    });
+  }
+
+  showScore5() {
+    this.selectedOption = 5;
+    this.users.sort((a, b) => {
+      const scoreA = a.score5 ?? 0;
+      const scoreB = b.score5 ?? 0;
+      return scoreB - scoreA;
+    });
+  }
+
+  autoComplete(event: AutoCompleteCompleteEvent) {
+    this.suggestions = this.name.filter(user =>
+      user.toLowerCase().includes(event.query.toLowerCase())
+    );
+  }
+
+  showDialogAdd() {
+    this.displayAdd = true;
+  }
+
+  showDialogEdit() {
+    this.displayEdit = true;
+  }
+
+}

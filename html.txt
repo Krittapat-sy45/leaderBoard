@@ -1,0 +1,212 @@
+<div class="leaderboard-container">
+
+    <h1 class="text-center mb-2">Leaderboard</h1>
+    <h2 class="text-center mb-4 subtitle">
+        <ng-container *ngIf="selectedOption === 0">คะแนนรวม</ng-container>
+        <ng-container *ngIf="selectedOption === 1">คะแนนข้อ 1</ng-container>
+        <ng-container *ngIf="selectedOption === 2">คะแนนข้อ 2</ng-container>
+        <ng-container *ngIf="selectedOption === 3">คะแนนข้อ 3</ng-container>
+        <ng-container *ngIf="selectedOption === 4">คะแนนข้อ 4</ng-container>
+        <ng-container *ngIf="selectedOption === 5">คะแนนข้อ 5</ng-container>
+    </h2>
+    <div class="button mt-4 position-absolute top-0 end-0">
+        <button class="me-2 btn btn-success" (click)="showDialogAdd()">เพิ่มผู้เล่น</button>
+        <button class="me-2 btn btn-success" (click)="showDialogEdit()">แก้ไขข้อมูลผู้เล่น</button>
+    </div>
+
+    <div class="header-row d-flex justify-content-between p-3 mb-4">
+        <div class="header-item flex-fill text-center" [ngClass]="{ selected: selectedOption === 0 }"
+            (click)="showAllScore()">
+            คะแนนรวม
+        </div>
+        <div class="header-item flex-fill text-center" [ngClass]="{ selected: selectedOption === 1 }"
+            (click)="showScore1()">
+            คะแนนข้อ 1
+        </div>
+        <div class="header-item flex-fill text-center" [ngClass]="{ selected: selectedOption === 2 }"
+            (click)="showScore2()">
+            คะแนนข้อ 2
+        </div>
+        <div class="header-item flex-fill text-center" [ngClass]="{ selected: selectedOption === 3 }"
+            (click)="showScore3()">
+            คะแนนข้อ 3
+        </div>
+        <div class="header-item flex-fill text-center" [ngClass]="{ selected: selectedOption === 4 }"
+            (click)="showScore4()">
+            คะแนนข้อ 4
+        </div>
+        <div class="header-item flex-fill text-center" [ngClass]="{ selected: selectedOption === 5 }"
+            (click)="showScore5()">
+            คะแนนข้อ 5
+        </div>
+    </div>
+
+    <div class="table">
+        <div class="row-table" *ngFor="let user of users; let index = index">
+            <i *ngIf="index === 0" class="fa fa-trophy top1 cell"></i>
+            <i *ngIf="index === 1" class="fa fa-trophy top2 cell"></i>
+            <i *ngIf="index === 2" class="fa fa-trophy top3 cell"></i>
+            <div *ngIf="index > 2" class="cell rank">{{ index + 1 }}</div>
+            <div class="cell name">{{ user.name }}</div>
+
+            <div class="cell score">
+                <ng-container *ngIf="selectedOption === 1">{{ user.score1 ?? 0 }} คะแนน</ng-container>
+                <ng-container *ngIf="selectedOption === 2">{{ user.score2 ?? 0 }} คะแนน</ng-container>
+                <ng-container *ngIf="selectedOption === 3">{{ user.score3 ?? 0 }} คะแนน</ng-container>
+                <ng-container *ngIf="selectedOption === 4">{{ user.score4 ?? 0 }} คะแนน</ng-container>
+                <ng-container *ngIf="selectedOption === 5">{{ user.score5 ?? 0 }} คะแนน</ng-container>
+                <ng-container *ngIf="selectedOption === 0">{{ user.allScore }} คะแนน</ng-container>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+<p-dialog header="เพิ่มผู้เล่น" [(visible)]="displayAdd" [modal]="true" [closable]="true"
+    [style]="{width: '700px', height: '350px'}">
+    <div class="mt-1">
+        <form [formGroup]="formAdd">
+            <div class="row mb-3">
+                <div class="col-md-6">
+                    <label for="name" class="form-label">ชื่อ</label>
+                    <input id="name" formControlName="name" class="form-control">
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label">คะแนนข้อ 1</label>
+                    <input type="number" formControlName="score1" class="form-control">
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label">คะแนนข้อ 2</label>
+                    <input type="number" formControlName="score2" class="form-control">
+                </div>
+            </div>
+            <div class="row mb-3">
+                <div class="col-md-4">
+                    <label class="form-label">คะแนนข้อ 3</label>
+                    <input type="number" formControlName="score3" class="form-control">
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label">คะแนนข้อ 4</label>
+                    <input type="number" formControlName="score4" class="form-control">
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label">คะแนนข้อ 5</label>
+                    <input type="number" formControlName="score5" class="form-control">
+                </div>
+            </div>
+            <div class="text-center mt-4">
+                <button (click)="onSave()" class="btn btn-success">Save</button>
+
+            </div>
+        </form>
+    </div>
+</p-dialog>
+
+
+<!-- <p-dialog header="แก้ไขข้อมูลผู้เล่น" [(visible)]="displayEdit" [modal]="true" [closable]="true"
+    [style]="{width: '700px', height: '400px'}">
+    <div class="row mb-3 d-flex align-items-center justify-content-center">
+        <div class="col-md-4">
+            <p-autoComplete [(ngModel)]="selectedName" [suggestions]="suggestions"
+                (completeMethod)="autoComplete($event)" />
+        </div>
+        <div class="col-md-3">
+            <button class="p-button p-component p-button-text p-button-icon-right" (click)="onSearch()">
+                <span class="pi pi-search"></span>
+                <span class="p-button-label">Search</span>
+            </button>
+        </div>
+        <div class="mt-4">
+            <form [formGroup]="formEdit">
+                <div class="row mb-3">
+                    <div class="col-md-6">
+                        <label for="name" class="form-label">ชื่อ</label>
+                        <input id="name" formControlName="name" class="form-control">
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label">คะแนนข้อ 1</label>
+                        <input type="number" formControlName="score1" class="form-control">
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label">คะแนนข้อ 2</label>
+                        <input type="number" formControlName="score2" class="form-control">
+                    </div>
+                </div>
+                <div class="row mb-3">
+                    <div class="col-md-4">
+                        <label class="form-label">คะแนนข้อ 3</label>
+                        <input type="number" formControlName="score3" class="form-control">
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label">คะแนนข้อ 4</label>
+                        <input type="number" formControlName="score4" class="form-control">
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label">คะแนนข้อ 5</label>
+                        <input type="number" formControlName="score5" class="form-control">
+                    </div>
+                </div>
+                <div class="d-flex justify-content-center gap-2 mb-3">
+                    <button (click)="onUpdate()" class="btn btn-success">Update</button>
+                    <button (click)="onDelete()" class="btn btn-danger">Delete</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</p-dialog> -->
+
+<p-dialog header="แก้ไขข้อมูลผู้เล่น" [(visible)]="displayEdit" [modal]="true" [closable]="true"
+    [style]="{width: '700px', height: '400px'}">
+    <div class="row mb-3 d-flex justify-content-center align-items-center">
+        <div class="col-md-4">
+            <p-autoComplete [(ngModel)]="selectedName" [suggestions]="suggestions"
+                (completeMethod)="autoComplete($event)" placeholder="ค้นหาผู้เล่น..." />
+        </div>
+        <div class="col-md-3">
+            <button class=" btn btn-primary p-button p-component p-button-text p-button-icon-right"
+                (click)="onSearch()">
+                <span class="pi pi-search">Search</span>
+            </button>
+        </div>
+    </div>
+
+
+    <div class="form-container">
+        <form [formGroup]="formEdit">
+            <div class="row mb-4">
+                <div class="col-md-6">
+                    <label for="name" class="form-label">ชื่อ</label>
+                    <input id="name" formControlName="name" class="form-control">
+                </div>
+                <div class="col-md-3">
+                    <label for="score1" class="form-label">คะแนนข้อ 1</label>
+                    <input id="score1" formControlName="score1" type="number" class="form-control">
+                </div>
+                <div class="col-md-3">
+                    <label for="score2" class="form-label">คะแนนข้อ 2</label>
+                    <input id="score2" formControlName="score2" type="number" class="form-control">
+                </div>
+            </div>
+
+            <div class="row mb-4">
+                <div class="col-md-4">
+                    <label for="score3" class="form-label">คะแนนข้อ 3</label>
+                    <input id="score3" formControlName="score3" type="number" class="form-control">
+                </div>
+                <div class="col-md-4">
+                    <label for="score4" class="form-label">คะแนนข้อ 4</label>
+                    <input id="score4" formControlName="score4" type="number" class="form-control">
+                </div>
+                <div class="col-md-4">
+                    <label for="score5" class="form-label">คะแนนข้อ 5</label>
+                    <input id="score5" formControlName="score5" type="number" class="form-control">
+                </div>
+            </div>
+
+            <div class="d-flex justify-content-center gap-3">
+                <button (click)="onUpdate()" class="btn btn-success">Update</button>
+                <button (click)="onDelete()" class="btn btn-danger">Delete</button>
+            </div>
+        </form>
+    </div>
+</p-dialog>
